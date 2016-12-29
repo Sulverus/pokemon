@@ -53,13 +53,13 @@ local game = {
     catch_distance = 100,
     respawn_time = 60,
     player_model = {},
-    monster_model = {},
+    pokemon_model = {},
     -- pokemon respawn fiber
     respawn = function(self)
         fiber.name('Respawn fiber')
         while true do
-            for _, tuple in box.space.monsters.index[1]:pairs{'catched'} do
-                box.space.monsters:update(tuple[1], {{'=', 2, 'active'}})
+            for _, tuple in box.space.pokemons.index[1]:pairs{'catched'} do
+                box.space.pokemons:update(tuple[1], {{'=', 2, 'active'}})
             end
             fiber.sleep(self.respawn_time)
         end
@@ -73,25 +73,25 @@ local game = {
     -- create game object
     start = function(self)
         -- create spaces and indexes
-        if box.space.monsters == nil then
-            box.schema.create_space('monsters')
-            box.space.monsters:create_index(
+        if box.space.pokemons == nil then
+            box.schema.create_space('pokemons')
+            box.space.pokemons:create_index(
                 "primary", {type = 'hash', parts = {1, 'unsigned'}}
             )
-            box.space.monsters:create_index(
+            box.space.pokemons:create_index(
                 "status", {type = "tree", parts = {2, 'str'}}
             )
         end
 
         -- create and compile models
-        local ok_m, monster = avro.create(schema.pokemon)
+        local ok_m, pokemon = avro.create(schema.pokemon)
         local ok_p, player = avro.create(schema.player)
-        local ok_cm, compiled_monster = avro.compile(monster)
+        local ok_cm, compiled_pokemon = avro.compile(pokemon)
         local ok_cp, compiled_player = avro.compile(player)
 
         if ok_m and ok_p and ok_cm and ok_cp then
             -- start game loop
-            self.monster_model = compiled_monster
+            self.pokemon_model = compiled_pokemon
             self.player_model = compiled_player
             fiber.create(self.respawn, self)
             log.info('Started')
@@ -103,10 +103,10 @@ local game = {
 
     -- return pokemons list in map
     map = function(self)
-        local data = box.space.monsters.index[1]:select('active')
+        local data = box.space.pokemons.index[1]:select('active')
         local result = {}
         for _, tuple in pairs(data) do
-            local ok, pokemon = self.monster_model.unflatten(tuple)
+            local ok, pokemon = self.pokemon_model.unflatten(tuple)
             table.insert(result, pokemon)
         end
         return result
@@ -115,11 +115,11 @@ local game = {
     -- add pokemon to map and store it in Tarantool
     add_pokemon = function(self, pokemon)
         pokemon.status = 'active'
-        local ok, tuple = self.monster_model.flatten(pokemon)
+        local ok, tuple = self.pokemon_model.flatten(pokemon)
         if not ok then
             return false
         end
-        box.space.monsters:replace(tuple)
+        box.space.pokemons:replace(tuple)
         return true
     end,
 
@@ -131,11 +131,11 @@ local game = {
             return false
         end
         -- get pokemon data
-        local p_tuple = box.space.monsters:get(pokemon_id)
+        local p_tuple = box.space.pokemons:get(pokemon_id)
         if p_tuple == nil then
             return false
         end
-        local ok, pokemon = self.monster_model.unflatten(p_tuple)
+        local ok, pokemon = self.pokemon_model.unflatten(p_tuple)
         if not ok then
             return false
         end
@@ -154,7 +154,7 @@ local game = {
         local catched = math.random(100) > 100 - pokemon.chance
         if catched then
             -- update and notify on success
-            box.space.monsters:update(pokemon_id, {{'=', 2, 'catched'}})
+            box.space.pokemons:update(pokemon_id, {{'=', 2, 'catched'}})
             self:notify(player, pokemon)
         end
         return catched
