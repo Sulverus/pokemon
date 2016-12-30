@@ -52,14 +52,21 @@ local game = {
     nationalmap = 2163, -- US National Atlas Equal Area projection (meters)
     catch_distance = 100,
     respawn_time = 60,
+    status = {
+        active='active',
+        catched='catched'
+    },
     player_model = {},
     pokemon_model = {},
     -- pokemon respawn fiber
     respawn = function(self)
         fiber.name('Respawn fiber')
         while true do
-            for _, tuple in box.space.pokemons.index[1]:pairs{'catched'} do
-                box.space.pokemons:update(tuple[1], {{'=', 2, 'active'}})
+            for _, tuple in box.space.pokemons.index[1]:pairs(
+                    self.status.catched) do
+                box.space.pokemons:update(
+                    tuple[1], {{'=', 2, self.status.active}}
+                )
             end
             fiber.sleep(self.respawn_time)
         end
@@ -103,9 +110,9 @@ local game = {
 
     -- return pokemons list in map
     map = function(self)
-        local data = box.space.pokemons.index[1]:select('active')
         local result = {}
-        for _, tuple in pairs(data) do
+        for _, tuple in box.space.pokemons.index[1]:pairs(
+                self.status.active) do
             local ok, pokemon = self.pokemon_model.unflatten(tuple)
             table.insert(result, pokemon)
         end
@@ -114,7 +121,7 @@ local game = {
 
     -- add pokemon to map and store it in Tarantool
     add_pokemon = function(self, pokemon)
-        pokemon.status = 'active'
+        pokemon.status = self.status.active
         local ok, tuple = self.pokemon_model.flatten(pokemon)
         if not ok then
             return false
@@ -139,6 +146,9 @@ local game = {
         if not ok then
             return false
         end
+        if pokemon.status ~= self.status.active then
+            return false
+        end
         local m_pos = gis.Point(
             {pokemon.location.x, pokemon.location.y}, self.wgs84
         ):transform(self.nationalmap)
@@ -151,10 +161,12 @@ local game = {
             return false
         end
         -- try to catch pokemon
-        local catched = math.random(100) > 100 - pokemon.chance
+        local catched = math.random(100) >= 100 - pokemon.chance
         if catched then
             -- update and notify on success
-            box.space.pokemons:update(pokemon_id, {{'=', 2, 'catched'}})
+            box.space.pokemons:update(
+                pokemon_id, {{'=', 2, self.status.catched}}
+            )
             self:notify(player, pokemon)
         end
         return catched
