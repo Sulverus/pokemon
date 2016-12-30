@@ -72,7 +72,7 @@ local game = {
         end
     end,
 
-    -- event notification fiber
+    -- event notification
     notify = function(self, player, pokemon)
         log.info("Player '%s' caught '%s'", player.name, pokemon.name)
     end,
