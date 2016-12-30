@@ -73,7 +73,7 @@ local game = {
     -- create game object
     start = function(self)
         -- create spaces and indexes
-        if box.space.pokemons == nil then
+        box.once('init', function()
             box.schema.create_space('pokemons')
             box.space.pokemons:create_index(
                 "primary", {type = 'hash', parts = {1, 'unsigned'}}
@@ -81,7 +81,7 @@ local game = {
             box.space.pokemons:create_index(
                 "status", {type = "tree", parts = {2, 'str'}}
             )
-        end
+        end)
 
         -- create and compile models
         local ok_m, pokemon = avro.create(schema.pokemon)
