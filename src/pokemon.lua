@@ -62,7 +62,7 @@ local game = {
     respawn = function(self)
         fiber.name('Respawn fiber')
         while true do
-            for _, tuple in box.space.pokemons.index[1]:pairs(
+            for _, tuple in box.space.pokemons.index.status:pairs(
                     self.status.caught) do
                 box.space.pokemons:update(
                     tuple[1], {{'=', 2, self.status.active}}
@@ -111,7 +111,7 @@ local game = {
     -- return pokemons list in map
     map = function(self)
         local result = {}
-        for _, tuple in box.space.pokemons.index[1]:pairs(
+        for _, tuple in box.space.pokemons.index.status:pairs(
                 self.status.active) do
             local ok, pokemon = self.pokemon_model.unflatten(tuple)
             table.insert(result, pokemon)
