@@ -90,21 +90,26 @@ local game = {
             )
         end)
 
-        -- create and compile models
+        -- create models
         local ok_m, pokemon = avro.create(schema.pokemon)
         local ok_p, player = avro.create(schema.player)
-        local ok_cm, compiled_pokemon = avro.compile(pokemon)
-        local ok_cp, compiled_player = avro.compile(player)
-
-        if ok_m and ok_p and ok_cm and ok_cp then
-            -- start game loop
-            self.pokemon_model = compiled_pokemon
-            self.player_model = compiled_player
-            fiber.create(self.respawn, self)
-            log.info('Started')
-            return true
+        if ok_m and ok_p then
+            -- compile models
+            local ok_cm, compiled_pokemon = avro.compile(pokemon)
+            local ok_cp, compiled_player = avro.compile(player)
+            if ok_cm and ok_cp then
+                -- start the game
+                self.pokemon_model = compiled_pokemon
+                self.player_model = compiled_player
+                fiber.create(self.respawn, self)
+                log.info('Started')
+                return true
+            else
+                log.error('Schema compilation failed')
+            end
+        else
+            log.info('Schema creation failed')
         end
-        log.error('Start failed')
         return false
     end,
 
