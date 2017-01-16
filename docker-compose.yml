@@ -1,0 +1,14 @@
+ version: '2'
+ services:
+   pserver:
+     build: src
+   phttp:
+     depends_on: 
+       - pserver
+     build: http
+   pclient:
+     depends_on:
+       - phttp
+     build: client
+     environment:
+       - SERVER_URI=http://phttp:80/api
