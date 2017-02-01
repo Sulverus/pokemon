@@ -58,6 +58,10 @@ local game = {
     },
     player_model = {},
     pokemon_model = {},
+
+    id_field = 1,
+    status_field = 2,
+
     -- pokemon respawn fiber
     respawn = function(self)
         fiber.name('Respawn fiber')
@@ -65,7 +69,8 @@ local game = {
             for _, tuple in box.space.pokemons.index.status:pairs(
                     self.status.caught) do
                 box.space.pokemons:update(
-                    tuple[1], {{'=', 2, self.status.active}}
+                    tuple[self.id_field],
+                    {{'=', self.status_field, self.status.active}}
                 )
             end
             fiber.sleep(self.respawn_time)
@@ -170,7 +175,7 @@ local game = {
         if caught then
             -- update and notify on success
             box.space.pokemons:update(
-                pokemon_id, {{'=', 2, self.status.caught}}
+                pokemon_id, {{'=', self.status_field, self.status.caught}}
             )
             self:notify(player, pokemon)
         end
