@@ -52,25 +52,25 @@ local game = {
     nationalmap = 2163, -- US National Atlas Equal Area projection (meters)
     catch_distance = 100,
     respawn_time = 60,
-    status = {
-        active='active',
-        caught='caught'
+    state = {
+        ACTIVE='active',
+        CAUGHT='caught'
     },
     player_model = {},
     pokemon_model = {},
 
-    id_field = 1,
-    status_field = 2,
+    ID = 1,
+    STATUS = 2,
 
     -- pokemon respawn fiber
     respawn = function(self)
         fiber.name('Respawn fiber')
         while true do
             for _, tuple in box.space.pokemons.index.status:pairs(
-                    self.status.caught) do
+                    self.state.CAUGHT) do
                 box.space.pokemons:update(
-                    tuple[self.id_field],
-                    {{'=', self.status_field, self.status.active}}
+                    tuple[self.ID],
+                    {{'=', self.STATUS, self.state.ACTIVE}}
                 )
             end
             fiber.sleep(self.respawn_time)
@@ -122,7 +122,7 @@ local game = {
     map = function(self)
         local result = {}
         for _, tuple in box.space.pokemons.index.status:pairs(
-                self.status.active) do
+                self.state.ACTIVE) do
             local ok, pokemon = self.pokemon_model.unflatten(tuple)
             table.insert(result, pokemon)
         end
@@ -131,7 +131,7 @@ local game = {
 
     -- add pokemon to map and store it in Tarantool
     add_pokemon = function(self, pokemon)
-        pokemon.status = self.status.active
+        pokemon.status = self.state.ACTIVE
         local ok, tuple = self.pokemon_model.flatten(pokemon)
         if not ok then
             return false
@@ -156,7 +156,7 @@ local game = {
         if not ok then
             return false
         end
-        if pokemon.status ~= self.status.active then
+        if pokemon.status ~= self.state.ACTIVE then
             return false
         end
         local m_pos = gis.Point(
@@ -175,7 +175,7 @@ local game = {
         if caught then
             -- update and notify on success
             box.space.pokemons:update(
-                pokemon_id, {{'=', self.status_field, self.status.caught}}
+                pokemon_id, {{'=', self.STATUS, self.state.CAUGHT}}
             )
             self:notify(player, pokemon)
         end
