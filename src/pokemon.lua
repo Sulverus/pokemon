@@ -88,7 +88,7 @@ local game = {
         box.once('init', function()
             box.schema.create_space('pokemons')
             box.space.pokemons:create_index(
-                "primary", {type = 'hash', parts = {1, 'unsigned'}}
+                "primary", {type = 'hash', parts = {1, 'NUM'}}
             )
             box.space.pokemons:create_index(
                 "status", {type = "tree", parts = {2, 'str'}}
