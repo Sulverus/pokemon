@@ -1,5 +1,5 @@
 FROM tarantool/tarantool-nginx:latest
-MAINTAINER andrey@tarantool.org
+MAINTAINER doc@tarantool.org
 
 COPY nginx.conf /etc/nginx/nginx.conf
 VOLUME ["/var/cache/nginx"]
