@@ -1,5 +1,5 @@
 FROM tarantool/tarantool:1.6
-MAINTAINER andrey@tarantool.org
+MAINTAINER doc@tarantool.org
 
 COPY *.lua /opt/tarantool/
 EXPOSE 3301
